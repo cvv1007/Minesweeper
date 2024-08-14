@@ -1,0 +1,16 @@
+.grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: auto;
+}
+
+.row {
+    display: flex;
+}
+
+#hidden {
+    visibility: hidden;
+    display: none;
+}
