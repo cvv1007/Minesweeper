@@ -7,7 +7,6 @@ import { directions } from "./constants.js"
 import "./gridStyle.css";
 
 function Grid({ x, y, percentMines }) {
-    // TODO menu stuff and styling
     let numMines = x * y * (percentMines / 100);
     x = 15
     y = 15
@@ -27,6 +26,7 @@ function Grid({ x, y, percentMines }) {
                     adjacency: 0, 
                     mine: false, 
                     flag: false, 
+                    highlight: false,
                     open: false, 
                     loc: [i, j],
                 });
@@ -92,13 +92,32 @@ function Grid({ x, y, percentMines }) {
                     if (r < 0 || c < 0 || r >= x || c >= y) continue;
                     if (gameGrid[r][c].flag) countAdjacentFlags++;
                 }
-                if (countAdjacentFlags === tile.adjacency) {
-                    bfsOpenTiles(row, col);
-                }
+                if (countAdjacentFlags === tile.adjacency) bfsOpenTiles(row, col);            
             }
             updateGridCell(row, col, {...tile, open: true});
-
+            
             if (tile.adjacency === 0) bfsOpenTiles(row, col);
+        }
+        
+        if (data.status === 'select') {
+            let gridCopy = gameGrid;
+            gridCopy[row][col].highlight = true;
+            
+            if (gridCopy[row][col].open) {
+                for (const [rDir, cDir] of directions) {
+                    const r = row + rDir;
+                    const c = col + cDir;
+                    if (r < 0 || c < 0 || r >= x || c >= y || gameGrid[r][c].flag) continue;
+                    gridCopy[r][c].highlight = true;
+                }
+            }
+            setGrid(gridCopy);
+            forceUpdate(!update);
+        }
+
+        if (data.status === 'deselect') {
+            setGrid(gameGrid.map((row) => row.map((tile) => tile = { ...tile, highlight: false } )));
+            forceUpdate(!update);
         }
         
         if (gameGrid.every(row => row.every(cell => cellCorrect(cell) ))) {
@@ -107,7 +126,7 @@ function Grid({ x, y, percentMines }) {
         }
     }
 
-    // TODO highlight adjacent tiles that are to be opened when adjacency > 0
+    // TODO Flag counter and restart set % mines grid dimensions, styling
     function bfsOpenTiles(row, col) {
         let gridCopy = gameGrid;
         const queue = [gameGrid[row][col]];
@@ -131,20 +150,6 @@ function Grid({ x, y, percentMines }) {
         forceUpdate(!update);
     }
 
-    /*
-    * Old function that opened adjacency 0 tiles by clicking child component
-    */
-    // function propagateOpenTiles(row, col) {
-    //     for (let [rDir, cDir] of directions) {
-    //         let r = row + rDir;
-    //         let c = col + cDir;
-            
-    //         if (r < 0 || c < 0 || r >= x || c >= y || seen[r*y+c]) continue;
-    //         tileRefs.current[r][c].current.click();
-    //         seen[r*y+c] = true;
-    //     }
-    // }
-
     return (
         <div className="grid" style={ {pointerEvents: gameOver ? 'none':'auto'} }>
             <p id="hidden">{update}</p>
@@ -159,6 +164,7 @@ function Grid({ x, y, percentMines }) {
                             open={cell.open}
                             wrong={cell.wrong}
                             adjacent={cell.adjacency} 
+                            highlight={cell.highlight}
                             sendData={handleDataFromTile}
                         />
                     ))} 

@@ -15,7 +15,7 @@
     background-color: rgb(0, 170, 170);
 }
 
-.unopened:active {
+.active {
     background-color: rgb(0, 120, 120);
 }
 

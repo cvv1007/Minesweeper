@@ -27,11 +27,7 @@ function Tile(props) {
         if (flagged) flag = false;
         setFlag(!flagged);
 
-        props.sendData({ 
-            flag,
-            wrong: (flag && !props.mine),
-            loc: props.id, 
-        });
+        props.sendData({ flag, wrong: (flag && !props.mine), loc: props.id });
     }
 
     function setTileContent() {
@@ -46,17 +42,29 @@ function Tile(props) {
     function setTileClass() {
         let tileClass = "unopened";
         
+        if (props.highlight) tileClass = "active";
         if (props.open || opened) tileClass = "opened";
         if ((props.wrong && props.end) || (props.mine && (opened || props.open))) tileClass = "wrong";
 
         return "tile " + tileClass;
     }
 
+    const selectAdjacents = (e) => { 
+        const LEFT_CLICK = 0;
+        if (e.button !== LEFT_CLICK) return;
+        props.sendData({ status: "select", loc: props.id }) 
+    }
+
+    const deselectAdjacents = () => { props.sendData({ status: "deselect", loc: props.id }) }
+
     return (
         <div
             className={setTileClass()}
             onClick={handleClick}
             onContextMenu={handleFlag}
+            onMouseDown={selectAdjacents}
+            onMouseUp={deselectAdjacents}
+            onMouseLeave={deselectAdjacents}
         >
             {setTileContent()}
         </div>
