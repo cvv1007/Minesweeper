@@ -6,15 +6,20 @@ import { directions } from "./constants.js"
 
 import "./gridStyle.css";
 
-function Grid({ x, y, percentMines }) {
-    let numMines = x * y * (percentMines / 100);
-    x = 15
-    y = 15
-    numMines = 30
+function Grid({ x, y, percentMines, refresh }) {
+    const numMines = Math.floor(x * y * (percentMines / 100));
 
     const [gameOver, setGameOver] = useState(false);
     const [gameGrid, setGrid] = useState(createGrid());
     const [update, forceUpdate] = useState(false);
+
+    // Refresh game grid on Restart press
+    const [restart, restartGame] = useState(refresh);
+    if (restart !== refresh) {
+        restartGame(refresh);
+        setGameOver(false);
+        setGrid(createGrid());
+    }
 
     function createGrid() {
         let grid = [];
@@ -76,10 +81,14 @@ function Grid({ x, y, percentMines }) {
         const tile = gameGrid[row][col];
         const cellCorrect = (cell) => { return (cell.flag === cell.mine) && (!cell.mine === cell.open) };
 
-        if (data.status === 'lose') setGameOver(true);
+        if (data.status === 'lose') {
+            updateGridCell(row, col, {...tile, wrong: true, open: true});
+            setGameOver(true);
+        }
 
         if (data.hasOwnProperty("flag")) {
             updateGridCell(row, col, {...tile, flag: data.flag, wrong: data.wrong});
+            forceUpdate(!update);
         }
 
         if (data.status === 'open') {
@@ -95,10 +104,21 @@ function Grid({ x, y, percentMines }) {
                 if (countAdjacentFlags === tile.adjacency) bfsOpenTiles(row, col);            
             }
             updateGridCell(row, col, {...tile, open: true});
-            
+            forceUpdate(!update);
+
             if (tile.adjacency === 0) bfsOpenTiles(row, col);
         }
         
+        if (gameGrid.every(row => row.every(cell => cellCorrect(cell) ))) {
+            // TODO handle win somehow ie display a win
+            console.log("win")
+            setGameOver(true);
+        }
+    }
+
+    function handleHover(data) {
+        const [row, col] = data.loc;
+
         if (data.status === 'select') {
             let gridCopy = gameGrid;
             gridCopy[row][col].highlight = true;
@@ -119,14 +139,9 @@ function Grid({ x, y, percentMines }) {
             setGrid(gameGrid.map((row) => row.map((tile) => tile = { ...tile, highlight: false } )));
             forceUpdate(!update);
         }
-        
-        if (gameGrid.every(row => row.every(cell => cellCorrect(cell) ))) {
-            console.log("win")
-            setGameOver(true);
-        }
     }
 
-    // TODO Flag counter and restart set % mines grid dimensions, styling
+    // TODO Flag counter and styling
     function bfsOpenTiles(row, col) {
         let gridCopy = gameGrid;
         const queue = [gameGrid[row][col]];
@@ -159,13 +174,15 @@ function Grid({ x, y, percentMines }) {
                         <Tile 
                             key={i+j} 
                             id={[i, j]} 
-                            mine={cell.mine} 
                             end={gameOver}
+                            mine={cell.mine} 
                             open={cell.open}
+                            flag={cell.flag}
                             wrong={cell.wrong}
                             adjacent={cell.adjacency} 
                             highlight={cell.highlight}
                             sendData={handleDataFromTile}
+                            hover={handleHover}
                         />
                     ))} 
                 </div>

@@ -1,15 +1,14 @@
-import logo from './logo.svg';
-import Tile from './components/Tile/tile.jsx'
-import Grid from './components/Grid/grid.jsx'
+// import logo from './logo.svg';
+import Settings from './components/Settings/settings.jsx';
 
 import './App.css';
 
 function App() {
-  return (
-    <div className="App">
-      <Grid/>
-    </div>
-  );
+  	return (
+		<div className="App">
+			<Settings/>
+		</div>
+	);
 }
 
 export default App;
