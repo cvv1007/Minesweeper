@@ -12,12 +12,14 @@ function Grid({ x, y, percentMines, refresh }) {
     const [gameOver, setGameOver] = useState(false);
     const [gameGrid, setGrid] = useState(createGrid());
     const [update, forceUpdate] = useState(false);
+    const [counter, updateCounter] = useState(numMines);
 
     // Refresh game grid on Restart press
     const [restart, restartGame] = useState(refresh);
     if (restart !== refresh) {
         restartGame(refresh);
         setGameOver(false);
+        updateCounter(numMines);
         setGrid(createGrid());
     }
 
@@ -88,7 +90,7 @@ function Grid({ x, y, percentMines, refresh }) {
 
         if (data.hasOwnProperty("flag")) {
             updateGridCell(row, col, {...tile, flag: data.flag, wrong: data.wrong});
-            forceUpdate(!update);
+            data.flag ? updateCounter(counter - 1) : updateCounter(counter + 1);
         }
 
         if (data.status === 'open') {
@@ -110,7 +112,7 @@ function Grid({ x, y, percentMines, refresh }) {
         }
         
         if (gameGrid.every(row => row.every(cell => cellCorrect(cell) ))) {
-            // TODO handle win somehow ie display a win
+            // TODO do something on win and add more styling
             console.log("win")
             setGameOver(true);
         }
@@ -141,7 +143,6 @@ function Grid({ x, y, percentMines, refresh }) {
         }
     }
 
-    // TODO Flag counter and styling
     function bfsOpenTiles(row, col) {
         let gridCopy = gameGrid;
         const queue = [gameGrid[row][col]];
@@ -168,6 +169,7 @@ function Grid({ x, y, percentMines, refresh }) {
     return (
         <div className="grid" style={ {pointerEvents: gameOver ? 'none':'auto'} }>
             <p id="hidden">{update}</p>
+            <div>Remaining Mines: {counter > 0 ? counter : 0}</div>
             {gameGrid.map((row, i) => (
                 <div className="row" key={i}>
                     {row.map((cell, j) => (
